@@ -10,7 +10,7 @@ jobs:
       matrix:
         include:
           - arch: aarch64
-          - arch: arm
+          - arch: armv7
     steps:
       - uses: actions/checkout@v3
       - uses: uraimo/run-on-arch-action@v2
@@ -29,7 +29,14 @@ jobs:
             if [[ $(echo $GITHUB_REF | grep -n refs/tags/v) ]]; then
               version=${GITHUB_REF/refs\/tags\//}
               echo "GITHUB_REF=${GITHUB_REF} VERSION=${version}"
-              tar zcf linux-serial-test-${version}-linux-${{ matrix.arch }}.tar.gz linux-serial-test LICENSES/*
+
+              if [ "${{ matrix.arch }}" = "aarch64" ]; then
+                arch="arm64"
+              elif [ "${{ matrix.arch }}" = "armv7" ]; then
+                arch="arm"
+              fi
+
+              tar zcf linux-serial-test-${version}-linux-${arch}.tar.gz linux-serial-test LICENSES/*
             fi
 
       - name: Release
