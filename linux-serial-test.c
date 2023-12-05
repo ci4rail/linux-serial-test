@@ -59,8 +59,8 @@ int _cl_tx_bytes = 0;
 int _cl_rs485_after_delay = -1;
 int _cl_rs485_before_delay = 0;
 int _cl_rs485_rts_after_send = 0;
-int _cl_tx_time = 0;
-int _cl_rx_time = 0;
+int _cl_tx_time_ms = 0;
+int _cl_rx_time_ms = 0;
 int _cl_ascii_range = 0;
 int _cl_write_after_read = 0;
 int _cl_rx_timeout_ms = 2000;
@@ -294,6 +294,8 @@ static void display_help(void)
 			"  -Q, --rs485_rts          Deassert RTS on send, assert after send. Omitting -Q inverts this logic.\n"
 			"  -o, --tx-time            Number of seconds to transmit for (defaults to 0, meaning no limit)\n"
 			"  -i, --rx-time            Number of seconds to receive for (defaults to 0, meaning no limit)\n"
+			"  -x, --tx-time-ms         Number of milliseconds to transmit for (defaults to 0, meaning no limit)\n"
+			"  -v, --rx-time-ms         Number of milliseconds to receive for (defaults to 0, meaning no limit)\n"
 			"  -A, --ascii              Output bytes range from 32 to 126 (default is 0 to 255)\n"
 			"  -I, --rx-timeout         Receive timeout\n"
 			"  -O, --tx-timeout         Transmission timeout\n"
@@ -334,6 +336,8 @@ static void process_options(int argc, char * argv[])
 			{"rs485_rts", no_argument, 0, 'Q'},
 			{"tx-time", required_argument, 0, 'o'},
 			{"rx-time", required_argument, 0, 'i'},
+			{"tx-time-ms", required_argument, 0, 'x'},
+			{"rx-time-ms", required_argument, 0, 'v'},
 			{"ascii", no_argument, 0, 'A'},
 			{"rx-timeout", required_argument, 0, 'I'},
 			{"tx-timeout", required_argument, 0, 'O'},
@@ -439,12 +443,22 @@ static void process_options(int argc, char * argv[])
 			break;
 		case 'o': {
 			char *endptr;
-			_cl_tx_time = strtol(optarg, &endptr, 0);
+			_cl_tx_time_ms = strtol(optarg, &endptr, 0) * 1000;
 			break;
 		}
 		case 'i': {
 			char *endptr;
-			_cl_rx_time = strtol(optarg, &endptr, 0);
+			_cl_rx_time_ms = strtol(optarg, &endptr, 0) * 1000;
+			break;
+		}
+		case 'x': {
+			char *endptr;
+			_cl_tx_time_ms = strtol(optarg, &endptr, 0);
+			break;
+		}
+		case 'v': {
+			char *endptr;
+			_cl_rx_time_ms = strtol(optarg, &endptr, 0);
 			break;
 		}
 		case 'A':
@@ -862,18 +876,21 @@ int main(int argc, char * argv[])
 			}
 		}
 
-		if (_cl_tx_time) {
-			if (current.tv_sec - start_time.tv_sec >= _cl_tx_time) {
-				_cl_tx_time = 0;
+		int start_time_ms = start_time.tv_sec * 1000 + start_time.tv_nsec / 1000000;
+		int current_time_ms = current.tv_sec * 1000 + current.tv_nsec / 1000000;
+
+		if (_cl_tx_time_ms) {
+			if (current_time_ms - start_time_ms >= _cl_tx_time_ms) {
+				_cl_tx_time_ms = 0;
 				_cl_no_tx = 1;
 				serial_poll.events &= ~POLLOUT;
 				printf("Stopped transmitting.\n");
 			}
 		}
 
-		if (_cl_rx_time) {
-			if (current.tv_sec - start_time.tv_sec >= _cl_rx_time) {
-				_cl_rx_time = 0;
+		if (_cl_rx_time_ms) {
+			if (current_time_ms - start_time_ms >= _cl_rx_time_ms) {
+				_cl_rx_time_ms = 0;
 				_cl_no_rx = 1;
 				serial_poll.events &= ~POLLIN;
 				printf("Stopped receiving.\n");
