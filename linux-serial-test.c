@@ -61,6 +61,7 @@ int _cl_rs485_before_delay = 0;
 int _cl_rs485_rts_after_send = 0;
 int _cl_tx_time_ms = 0;
 int _cl_rx_time_ms = 0;
+int _cl_tx_max_bytes = 0;
 int _cl_ascii_range = 0;
 int _cl_write_after_read = 0;
 int _cl_rx_timeout_ms = 2000;
@@ -309,7 +310,7 @@ static void process_options(int argc, char * argv[])
 {
 	for (;;) {
 		int option_index = 0;
-		static const char *short_options = "hb:p:d:R:TsSy:z:cBertq:Ql:a:w:o:i:x:v:P:kKAI:O:Zn";
+		static const char *short_options = "hb:p:d:R:TsSy:z:cBertq:Ql:a:w:o:i:x:v:C:P:kKAI:O:Zn";
 		static const struct option long_options[] = {
 			{"help", no_argument, 0, 0},
 			{"baud", required_argument, 0, 'b'},
@@ -338,6 +339,7 @@ static void process_options(int argc, char * argv[])
 			{"rx-time", required_argument, 0, 'i'},
 			{"tx-time-ms", required_argument, 0, 'x'},
 			{"rx-time-ms", required_argument, 0, 'v'},
+			{"tx-max-bytes", required_argument, 0, 'C'},
 			{"ascii", no_argument, 0, 'A'},
 			{"rx-timeout", required_argument, 0, 'I'},
 			{"tx-timeout", required_argument, 0, 'O'},
@@ -459,6 +461,11 @@ static void process_options(int argc, char * argv[])
 		case 'v': {
 			char *endptr;
 			_cl_rx_time_ms = strtol(optarg, &endptr, 0);
+			break;
+		}
+		case 'v': {
+			char *endptr;
+			_cl_tx_max_bytes = strtol(optarg, &endptr, 0);
 			break;
 		}
 		case 'A':
@@ -876,6 +883,7 @@ int main(int argc, char * argv[])
 			}
 		}
 
+		// check time limits
 		int start_time_ms = start_time.tv_sec * 1000 + start_time.tv_nsec / 1000000;
 		int current_time_ms = current.tv_sec * 1000 + current.tv_nsec / 1000000;
 
@@ -895,6 +903,10 @@ int main(int argc, char * argv[])
 				serial_poll.events &= ~POLLIN;
 				printf("Stopped receiving.\n");
 			}
+		}
+
+		if(_cl_tx_max_bytes && _write_count >= _cl_tx_max_bytes) {
+			_cl_no_tx = 1;
 		}
 	}
 
