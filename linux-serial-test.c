@@ -479,6 +479,7 @@ static void process_options(int argc, char * argv[])
 			break;
 		case 'Z':
 			_cl_error_on_timeout = 1;
+			printf("Set error on timeout (_cl_error_on_timeout: %d)\n", _cl_error_on_timeout);
 			break;
 		case 'n':
 			_cl_no_icount = 1;
