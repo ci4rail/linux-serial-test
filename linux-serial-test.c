@@ -843,7 +843,7 @@ int main(int argc, char * argv[])
 		if ((diff_ms(&current, &last_timeout) > 1000) || (diff_ms(&last_timeout, &start_time) == 0)) {
 			int rx_timeout, tx_timeout;
 
-			printf("Check for timeout 1: current=%ld, last_read=%ld, last_write=%ld\n", current.tv_sec, last_read.tv_sec, last_write.tv_sec);
+			// printf("Check for timeout 1: current=%ld, last_read=%ld, last_write=%ld\n", current.tv_sec, last_read.tv_sec, last_write.tv_sec);
 
 			// Has it been over two seconds since we transmitted or received data?
 			rx_timeout = (!_cl_no_rx && diff_ms(&current, &last_read) > _cl_rx_timeout_ms);
@@ -857,7 +857,7 @@ int main(int argc, char * argv[])
 			}
 
 			if (rx_timeout || tx_timeout) {
-				printf("Check for timeout 2: rx_timeout=%d, tx_timeout=%d error_on_timeout=%d\n", rx_timeout, tx_timeout, _cl_error_on_timeout);
+				// printf("Check for timeout 2: rx_timeout=%d, tx_timeout=%d error_on_timeout=%d\n", rx_timeout, tx_timeout, _cl_error_on_timeout);
 				const char *s;
 				if (rx_timeout) {
 					printf("%s: No data received for %.1fs.",
@@ -914,7 +914,7 @@ int main(int argc, char * argv[])
 
 		if (_cl_tx_max_bytes) {
 			if (_cl_no_tx) {
-				printf("Check read count: (_read_count)%lld >= (_write_count)%lld\n", _read_count, _write_count);
+				// printf("Check read count: (_read_count)%lld >= (_write_count)%lld\n", _read_count, _write_count);
 				if (_write_count == _read_count) {
 					_cl_no_rx = 1;
 					serial_poll.events &= ~POLLIN;
