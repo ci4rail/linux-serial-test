@@ -821,6 +821,9 @@ int main(int argc, char * argv[])
 			}
 
 			if (serial_poll.revents & POLLOUT) {
+				if(_cl_no_rx) {
+					printf("ERROR: We should not write data");
+				}
 				if (_cl_tx_delay) {
 					// only write if it has been tx-delay ms
 					// since the last write
@@ -906,6 +909,7 @@ int main(int argc, char * argv[])
 		}
 
 		if (_cl_tx_max_bytes) {
+			printf("Check tx max bytes: (_write_count)%lld >= (_cl_tx_max_bytes)%d\n", _write_count, _cl_tx_max_bytes);
 			if (_cl_no_tx) {
 				if (_write_count == _read_count) {
 					_cl_no_rx = 1;
