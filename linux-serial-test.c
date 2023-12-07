@@ -905,8 +905,21 @@ int main(int argc, char * argv[])
 			}
 		}
 
-		if(_cl_tx_max_bytes && _write_count >= _cl_tx_max_bytes) {
-			_cl_no_tx = 1;
+		if (_cl_tx_max_bytes) {
+			if (_cl_no_tx) {
+				if (_write_count == _read_count) {
+					_cl_no_rx = 1;
+					serial_poll.events &= ~POLLIN;
+					printf("Stopped receiving. Reason: All bytes received\n");
+				} else if (_read_count > _write_count) {
+					printf("Error: read count (%lld) > write count (%lld)\n", _read_count, _write_count);
+					exit(-EIO);
+				}
+			} else if (_write_count >= _cl_tx_max_bytes) {
+				_cl_no_tx = 1;
+				serial_poll.events &= ~POLLOUT;
+				printf("Stopped transmitting. Reason: Tx Max Bytes reached or exceeded\n");
+			}
 		}
 	}
 
