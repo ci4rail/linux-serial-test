@@ -821,7 +821,7 @@ int main(int argc, char * argv[])
 			}
 
 			if (serial_poll.revents & POLLOUT) {
-				if(_cl_no_rx) {
+				if(_cl_no_tx) {
 					printf("ERROR: We should not write data");
 				}
 				if (_cl_tx_delay) {
@@ -854,6 +854,7 @@ int main(int argc, char * argv[])
 			}
 
 			if (rx_timeout || tx_timeout) {
+				printf("Check for timeout: rx_timeout=%d, tx_timeout=%d error_on_timeout=%d\n", rx_timeout, tx_timeout, _cl_error_on_timeout);
 				const char *s;
 				if (rx_timeout) {
 					printf("%s: No data received for %.1fs.",
@@ -911,6 +912,7 @@ int main(int argc, char * argv[])
 		if (_cl_tx_max_bytes) {
 			printf("Check tx max bytes: (_write_count)%lld >= (_cl_tx_max_bytes)%d\n", _write_count, _cl_tx_max_bytes);
 			if (_cl_no_tx) {
+				printf("Check read count: (_read_count)%lld >= (_write_count)%lld\n", _read_count, _write_count);
 				if (_write_count == _read_count) {
 					_cl_no_rx = 1;
 					serial_poll.events &= ~POLLIN;
