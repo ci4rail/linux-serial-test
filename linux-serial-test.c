@@ -463,7 +463,7 @@ static void process_options(int argc, char * argv[])
 			_cl_rx_time_ms = strtol(optarg, &endptr, 0);
 			break;
 		}
-		case 'v': {
+		case 'C': {
 			char *endptr;
 			_cl_tx_max_bytes = strtol(optarg, &endptr, 0);
 			break;
