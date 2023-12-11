@@ -288,6 +288,9 @@ static void display_help(void)
 			"  -a, --tx-delay           Delay between writing data (ms)\n"
 			"  -w, --tx-bytes           Number of bytes for each write (default is to repeatedly write 1024 bytes\n"
 			"                           until no more are accepted)\n"
+			"  -C, --tx-max-bytes       Maximal number of bytes to write for the whole test. The exact amount can only be\n"
+			"                           achieved if tx max bytes is a multiple of tx bytes, otherwise the remainder of the\n"
+			"                           devision is written additionally.\n"
 			"  -q, --rs485              Enable RS485 direction control on port, and set delay from when TX is\n"
 			"                           finished and RS485 driver enable is de-asserted. Delay is specified in\n"
 			"                           bit times. To optionally specify a delay from when the driver is enabled\n"
@@ -479,7 +482,6 @@ static void process_options(int argc, char * argv[])
 			break;
 		case 'Z':
 			_cl_error_on_timeout = 1;
-			printf("Set error on timeout (_cl_error_on_timeout: %d)\n", _cl_error_on_timeout);
 			break;
 		case 'n':
 			_cl_no_icount = 1;
@@ -822,9 +824,6 @@ int main(int argc, char * argv[])
 			}
 
 			if (serial_poll.revents & POLLOUT) {
-				if(_cl_no_tx) {
-					printf("ERROR: We should not write data");
-				}
 				if (_cl_tx_delay) {
 					// only write if it has been tx-delay ms
 					// since the last write
@@ -843,8 +842,6 @@ int main(int argc, char * argv[])
 		if ((diff_ms(&current, &last_timeout) > 1000) || (diff_ms(&last_timeout, &start_time) == 0)) {
 			int rx_timeout, tx_timeout;
 
-			// printf("Check for timeout 1: current=%ld, last_read=%ld, last_write=%ld\n", current.tv_sec, last_read.tv_sec, last_write.tv_sec);
-
 			// Has it been over two seconds since we transmitted or received data?
 			rx_timeout = (!_cl_no_rx && diff_ms(&current, &last_read) > _cl_rx_timeout_ms);
 			tx_timeout = (!_cl_no_tx && diff_ms(&current, &last_write) > _cl_tx_timeout_ms);
@@ -857,7 +854,6 @@ int main(int argc, char * argv[])
 			}
 
 			if (rx_timeout || tx_timeout) {
-				// printf("Check for timeout 2: rx_timeout=%d, tx_timeout=%d error_on_timeout=%d\n", rx_timeout, tx_timeout, _cl_error_on_timeout);
 				const char *s;
 				if (rx_timeout) {
 					printf("%s: No data received for %.1fs.",
