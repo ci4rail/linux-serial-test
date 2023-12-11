@@ -61,6 +61,7 @@ int _cl_rs485_before_delay = 0;
 int _cl_rs485_rts_after_send = 0;
 int _cl_tx_time_ms = 0;
 int _cl_rx_time_ms = 0;
+int _cl_tx_max_bytes = 0;
 int _cl_ascii_range = 0;
 int _cl_write_after_read = 0;
 int _cl_rx_timeout_ms = 2000;
@@ -287,6 +288,9 @@ static void display_help(void)
 			"  -a, --tx-delay           Delay between writing data (ms)\n"
 			"  -w, --tx-bytes           Number of bytes for each write (default is to repeatedly write 1024 bytes\n"
 			"                           until no more are accepted)\n"
+			"  -C, --tx-max-bytes       Maximal number of bytes to write for the whole test. The exact amount can only be\n"
+			"                           achieved if tx max bytes is a multiple of tx bytes, otherwise the remainder of the\n"
+			"                           division is written additionally.\n"
 			"  -q, --rs485              Enable RS485 direction control on port, and set delay from when TX is\n"
 			"                           finished and RS485 driver enable is de-asserted. Delay is specified in\n"
 			"                           bit times. To optionally specify a delay from when the driver is enabled\n"
@@ -309,7 +313,7 @@ static void process_options(int argc, char * argv[])
 {
 	for (;;) {
 		int option_index = 0;
-		static const char *short_options = "hb:p:d:R:TsSy:z:cBertq:Ql:a:w:o:i:x:v:P:kKAI:O:Zn";
+		static const char *short_options = "hb:p:d:R:TsSy:z:cBertq:Ql:a:w:o:i:x:v:C:P:kKAI:O:Zn";
 		static const struct option long_options[] = {
 			{"help", no_argument, 0, 0},
 			{"baud", required_argument, 0, 'b'},
@@ -338,6 +342,7 @@ static void process_options(int argc, char * argv[])
 			{"rx-time", required_argument, 0, 'i'},
 			{"tx-time-ms", required_argument, 0, 'x'},
 			{"rx-time-ms", required_argument, 0, 'v'},
+			{"tx-max-bytes", required_argument, 0, 'C'},
 			{"ascii", no_argument, 0, 'A'},
 			{"rx-timeout", required_argument, 0, 'I'},
 			{"tx-timeout", required_argument, 0, 'O'},
@@ -459,6 +464,11 @@ static void process_options(int argc, char * argv[])
 		case 'v': {
 			char *endptr;
 			_cl_rx_time_ms = strtol(optarg, &endptr, 0);
+			break;
+		}
+		case 'C': {
+			char *endptr;
+			_cl_tx_max_bytes = strtol(optarg, &endptr, 0);
 			break;
 		}
 		case 'A':
@@ -876,6 +886,7 @@ int main(int argc, char * argv[])
 			}
 		}
 
+		// check time limits
 		int start_time_ms = start_time.tv_sec * 1000 + start_time.tv_nsec / 1000000;
 		int current_time_ms = current.tv_sec * 1000 + current.tv_nsec / 1000000;
 
@@ -894,6 +905,23 @@ int main(int argc, char * argv[])
 				_cl_no_rx = 1;
 				serial_poll.events &= ~POLLIN;
 				printf("Stopped receiving.\n");
+			}
+		}
+
+		if (_cl_tx_max_bytes) {
+			if (_cl_no_tx) {
+				if (_write_count == _read_count) {
+					_cl_no_rx = 1;
+					serial_poll.events &= ~POLLIN;
+					printf("Stopped receiving. Reason: All bytes received\n");
+				} else if (_read_count > _write_count) {
+					printf("Error: read count (%lld) > write count (%lld)\n", _read_count, _write_count);
+					exit(-EIO);
+				}
+			} else if (_write_count >= _cl_tx_max_bytes) {
+				_cl_no_tx = 1;
+				serial_poll.events &= ~POLLOUT;
+				printf("Stopped transmitting. Reason: Tx Max Bytes reached or exceeded\n");
 			}
 		}
 	}

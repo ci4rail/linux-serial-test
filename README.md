@@ -42,6 +42,9 @@ Usage: linux-serial-test [OPTION]
   -a, --tx-delay           Delay between writing data (ms)
   -w, --tx-bytes           Number of bytes for each write (default is to repeatedly write 1024 bytes
                            until no more are accepted)
+  -C, --tx-max-bytes       Maximal number of bytes to write for the whole test. The exact amount can only be
+                           achieved if tx max bytes is a multiple of tx bytes, otherwise the remainder of the
+                           division is written additionally.
   -q, --rs485              Enable RS485 direction control on port, and set delay from when TX is
                            finished and RS485 driver enable is de-asserted. Delay is specified in
                            bit times. To optionally specify a delay from when the driver is enabled
