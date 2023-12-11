@@ -290,7 +290,7 @@ static void display_help(void)
 			"                           until no more are accepted)\n"
 			"  -C, --tx-max-bytes       Maximal number of bytes to write for the whole test. The exact amount can only be\n"
 			"                           achieved if tx max bytes is a multiple of tx bytes, otherwise the remainder of the\n"
-			"                           devision is written additionally.\n"
+			"                           division is written additionally.\n"
 			"  -q, --rs485              Enable RS485 direction control on port, and set delay from when TX is\n"
 			"                           finished and RS485 driver enable is de-asserted. Delay is specified in\n"
 			"                           bit times. To optionally specify a delay from when the driver is enabled\n"
@@ -910,7 +910,6 @@ int main(int argc, char * argv[])
 
 		if (_cl_tx_max_bytes) {
 			if (_cl_no_tx) {
-				// printf("Check read count: (_read_count)%lld >= (_write_count)%lld\n", _read_count, _write_count);
 				if (_write_count == _read_count) {
 					_cl_no_rx = 1;
 					serial_poll.events &= ~POLLIN;
